@@ -50,6 +50,72 @@ const defaultData = {
 };
 
 const STORAGE_KEY = 'birktiPortfolioAdminData';
+const ADMIN_LOGIN_KEY = 'birktiAdminLoggedIn';
+const ADMIN_USERNAME = 'admin';
+const ADMIN_PASSWORD = 'admin123';
+
+function clearAdminSession() {
+  localStorage.removeItem(ADMIN_LOGIN_KEY);
+}
+
+function clearAdminSession() {
+  localStorage.removeItem(ADMIN_LOGIN_KEY);
+}
+
+function isAdminAuthenticated() {
+  return localStorage.getItem(ADMIN_LOGIN_KEY) === 'true';
+}
+
+function isPublicPageTarget(targetPath) {
+  const normalized = targetPath.toLowerCase();
+  return !normalized.includes('admin') && !normalized.endsWith('login.html');
+}
+
+function redirectToLoginIfNeeded() {
+  const currentPath = window.location.pathname.toLowerCase();
+  const isLoginPage = currentPath.endsWith('login.html');
+  const isAdminDashboardPage = currentPath.endsWith('admin.html');
+
+  if (isLoginPage) {
+    if (isAdminAuthenticated()) {
+      window.location.href = 'admin.html';
+    }
+    return;
+  }
+
+  if (!isAdminDashboardPage && !isAdminAuthenticated()) {
+    window.location.href = 'login.html';
+    return;
+  }
+
+  if (isAdminDashboardPage && !isAdminAuthenticated()) {
+    window.location.href = 'login.html';
+  }
+}
+
+function handleAdminLoginForm() {
+  const loginForm = document.getElementById('admin-login-form');
+  if (!loginForm) return;
+
+  loginForm.addEventListener('submit', (event) => {
+    event.preventDefault();
+
+    const username = document.getElementById('adminUsername')?.value.trim();
+    const password = document.getElementById('adminPassword')?.value.trim();
+    const status = document.getElementById('loginStatus');
+
+    if (username === ADMIN_USERNAME && password === ADMIN_PASSWORD) {
+      localStorage.setItem(ADMIN_LOGIN_KEY, 'true');
+      window.location.href = 'admin.html';
+      return;
+    }
+
+    if (status) {
+      status.textContent = 'Invalid username or password.';
+      status.style.color = '#9c700f';
+    }
+  });
+}
 
 const form = document.getElementById('portfolio-form');
 const projectsList = document.getElementById('projectsList');
@@ -387,6 +453,35 @@ function applyDataToPortfolio(data) {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
+  redirectToLoginIfNeeded();
+  handleAdminLoginForm();
+
+  const currentPath = window.location.pathname.toLowerCase();
+  const isAdminArea = currentPath.includes('admin') || currentPath.endsWith('login.html');
+
+  if (isAdminArea) {
+    document.addEventListener('click', (event) => {
+      const link = event.target.closest('a');
+      if (!link) return;
+
+      const href = link.getAttribute('href');
+      if (!href || href.startsWith('#')) return;
+
+      const targetPath = new URL(href, window.location.href).pathname;
+      if (isPublicPageTarget(targetPath)) {
+        clearAdminSession();
+      }
+    });
+  }
+
+  const logoutBtn = document.getElementById('logoutBtn');
+  if (logoutBtn) {
+    logoutBtn.addEventListener('click', () => {
+      localStorage.removeItem(ADMIN_LOGIN_KEY);
+      window.location.href = 'login.html';
+    });
+  }
+
   if (!form && !projectsList && !customSectionsList && !statusBox) {
     return;
   }
