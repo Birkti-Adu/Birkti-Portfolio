@@ -46,7 +46,8 @@ const portfolioDefaults = {
         "Implemented secure user login and account access",
         "Built course management and learning content flow",
         "Used React.js, Node.js, and MongoDB"
-      ]
+      ],
+      websiteLink: ""
     },
     {
       title: "Hospital Management System",
@@ -58,7 +59,8 @@ const portfolioDefaults = {
         "Collected and entered patient and hospital records accurately",
         "Gathered stakeholder requirements and documented needs",
         "Applied data analysis to support system development decisions"
-      ]
+      ],
+      websiteLink: ""
     },
     {
       title: "The Brokers ECommerce",
@@ -70,7 +72,8 @@ const portfolioDefaults = {
         "Built user authentication and product listing features",
         "Implemented search filters and contact form workflows",
         "Used HTML, CSS, JavaScript, PHP, and MySQL"
-      ]
+      ],
+      websiteLink: ""
     },
     {
       title: "Personal Portfolio Website",
@@ -82,12 +85,72 @@ const portfolioDefaults = {
         "Designed and built a responsive portfolio experience",
         "Structured content for strong personal branding",
         "Used HTML, CSS, and JavaScript"
-      ]
+      ],
+      websiteLink: "https://birkti-portfolio.vercel.app"
+    },
+    {
+      title: "Lewegen Trading PLC",
+      year: "2026",
+      category: "Business Website",
+      description:
+        "Lewegen Trading PLC is a business website project designed to present the company’s services, products, and business activities in a professional and organized way.",
+      points: [
+        "Professional and modern website design",
+        "Organized presentation of company information and services",
+        "Responsive layout for desktop, tablet, and mobile"
+      ],
+      websiteLink: "https://lewegen-trading-plc.vercel.app"
+    },
+    {
+      title: "Hulem Event Planning",
+      year: "2026",
+      category: "Event Planning",
+      description:
+        "Hulem Event Planning is a creative website project developed to showcase event planning and management services with an engaging, welcoming online presence.",
+      points: [
+        "Attractive and event-focused visual design",
+        "Presentation of event planning services",
+        "Responsive and user-friendly interface"
+      ],
+      websiteLink: ""
     }
   ]
 };
 
 const STORAGE_KEY = "birktiPortfolioAdminData";
+
+function normalizeWebsiteLink(value) {
+  if (!value) return "";
+
+  const trimmed = String(value).trim();
+  if (!trimmed) return "";
+
+  const withoutSpacing = trimmed.replace(/\s+/g, "");
+  if (/^https?:\/\//i.test(withoutSpacing)) {
+    return withoutSpacing;
+  }
+
+  if (withoutSpacing.startsWith("//")) {
+    return `https:${withoutSpacing}`;
+  }
+
+  return `https://${withoutSpacing}`;
+}
+
+function normalizeProjects(projects) {
+  if (!Array.isArray(projects)) {
+    return [...portfolioDefaults.projects];
+  }
+
+  return projects.map((project) => ({
+    title: project.title || "",
+    year: project.year || "",
+    category: project.category || "",
+    description: project.description || "",
+    points: Array.isArray(project.points) ? project.points : [],
+    websiteLink: normalizeWebsiteLink(project.websiteLink)
+  }));
+}
 
 function readPortfolioData() {
   const saved = localStorage.getItem(STORAGE_KEY);
@@ -101,7 +164,7 @@ function readPortfolioData() {
     return {
       ...portfolioDefaults,
       ...parsed,
-      projects: parsed.projects || portfolioDefaults.projects,
+      projects: normalizeProjects(parsed.projects),
       customSections: parsed.customSections || portfolioDefaults.customSections
     };
   } catch (error) {
@@ -162,19 +225,26 @@ function renderProjectPage(data) {
   if (!grid) return;
 
   const projects = Array.isArray(data.projects) && data.projects.length ? data.projects : portfolioDefaults.projects;
-  const cards = projects.map((project) => `
-    <article class="project-card">
-      <div class="project-meta">
-        <span>${project.year || "2026"}</span>
-        <span>${project.category || "Project"}</span>
-      </div>
-      <h3>${project.title || "Project"}</h3>
-      <p>${project.description || ""}</p>
-      <ul>
-        ${(project.points || []).map((point) => `<li>${point}</li>`).join("")}
-      </ul>
-    </article>
-  `).join("");
+  const cards = projects.map((project) => {
+    const link = project.websiteLink ? `<a class="project-link" href="${project.websiteLink}" target="_blank" rel="noreferrer">Visit website</a>` : "<span class='project-link project-link-disabled'>Website link not added</span>";
+
+    return `
+      <article class="project-card">
+        <div class="project-meta">
+          <span>${project.year || "2026"}</span>
+          <span>${project.category || "Project"}</span>
+        </div>
+        <h3>${project.title || "Project"}</h3>
+        <p>${project.description || ""}</p>
+        <ul>
+          ${(project.points || []).map((point) => `<li>${point}</li>`).join("")}
+        </ul>
+        <div class="project-link-row">
+          ${link}
+        </div>
+      </article>
+    `;
+  }).join("");
 
   grid.innerHTML = cards;
 }

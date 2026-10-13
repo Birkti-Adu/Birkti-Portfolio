@@ -37,14 +37,48 @@ const defaultData = {
       year: '2025',
       category: 'Web App',
       description: 'A responsive online learning system for university students, focused on course delivery, user login, and educational content access.',
-      points: ['Implemented secure user login and account access', 'Built course management and learning content flow', 'Used React.js, Node.js, and MongoDB']
+      points: ['Implemented secure user login and account access', 'Built course management and learning content flow', 'Used React.js, Node.js, and MongoDB'],
+      websiteLink: ''
     },
     {
       title: 'Hospital Management System',
       year: '2025',
       category: 'Healthcare System',
       description: 'A healthcare-focused system project that involved data collection, requirements gathering, analysis, and planning for software needs in hospital operations.',
-      points: ['Collected and entered patient and hospital records accurately', 'Gathered stakeholder requirements and documented needs', 'Applied data analysis to support system development decisions']
+      points: ['Collected and entered patient and hospital records accurately', 'Gathered stakeholder requirements and documented needs', 'Applied data analysis to support system development decisions'],
+      websiteLink: ''
+    },
+    {
+      title: 'The Brokers ECommerce',
+      year: '2024',
+      category: 'E-Commerce',
+      description: 'A marketplace platform designed to connect house and car sellers with prospective buyers, with features that support browsing, search, and communication.',
+      points: ['Built user authentication and product listing features', 'Implemented search filters and contact form workflows', 'Used HTML, CSS, JavaScript, PHP, and MySQL'],
+      websiteLink: ''
+    },
+    {
+      title: 'Personal Portfolio Website',
+      year: '2024',
+      category: 'Portfolio',
+      description: 'A personal portfolio website created to showcase resume details, technical skills, and project work with a modern UI.',
+      points: ['Designed and built a responsive portfolio experience', 'Structured content for strong personal branding', 'Used HTML, CSS, and JavaScript'],
+      websiteLink: 'https://birkti-portfolio.vercel.app'
+    },
+    {
+      title: 'Lewegen Trading PLC',
+      year: '2026',
+      category: 'Business Website',
+      description: 'A business website project designed to present the company’s services, products, and business activities in a professional and organized way.',
+      points: ['Professional and modern website design', 'Organized presentation of company information and services', 'Responsive layout for desktop, tablet, and mobile'],
+      websiteLink: 'https://lewegen-trading-plc.vercel.app'
+    },
+    {
+      title: 'Hulem Event Planning',
+      year: '2026',
+      category: 'Event Planning',
+      description: 'A creative website project developed to showcase event planning and management services with an engaging, welcoming online presence.',
+      points: ['Attractive and event-focused visual design', 'Presentation of event planning services', 'Responsive and user-friendly interface'],
+      websiteLink: ''
     }
   ]
 };
@@ -123,6 +157,39 @@ const customSectionsList = document.getElementById('customSectionsList');
 const statusBox = document.getElementById('statusBox');
 const pageMode = document.body.dataset.page || 'dashboard';
 
+function normalizeWebsiteLink(value) {
+  if (!value) return '';
+
+  const trimmed = String(value).trim();
+  if (!trimmed) return '';
+
+  const withoutSpacing = trimmed.replace(/\s+/g, '');
+  if (/^https?:\/\//i.test(withoutSpacing)) {
+    return withoutSpacing;
+  }
+
+  if (withoutSpacing.startsWith('//')) {
+    return `https:${withoutSpacing}`;
+  }
+
+  return `https://${withoutSpacing}`;
+}
+
+function normalizeProjects(projects) {
+  if (!Array.isArray(projects)) {
+    return [...defaultData.projects];
+  }
+
+  return projects.map((project) => ({
+    title: project.title || '',
+    year: project.year || '',
+    category: project.category || '',
+    description: project.description || '',
+    points: Array.isArray(project.points) ? project.points : [],
+    websiteLink: normalizeWebsiteLink(project.websiteLink)
+  }));
+}
+
 function loadData() {
   const saved = localStorage.getItem(STORAGE_KEY);
   if (!saved) {
@@ -135,7 +202,7 @@ function loadData() {
     return {
       ...defaultData,
       ...parsed,
-      projects: parsed.projects || defaultData.projects,
+      projects: normalizeProjects(parsed.projects),
       customSections: parsed.customSections || defaultData.customSections
     };
   } catch {
@@ -178,6 +245,10 @@ function renderProjects(projects) {
         <div class="field-group">
           <label>Category</label>
           <input type="text" data-project-index="${index}" data-field="category" value="${escapeHtml(project.category || '')}" />
+        </div>
+        <div class="field-group" style="grid-column: 1 / -1;">
+          <label>Website link</label>
+          <input type="url" data-project-index="${index}" data-field="websiteLink" value="${escapeHtml(project.websiteLink || '')}" placeholder="https://example.com" />
         </div>
         <div class="field-group" style="grid-column: 1 / -1;">
           <label>Description</label>
@@ -309,6 +380,7 @@ function collectProjectData() {
       title: item.title || '',
       year: item.year || '',
       category: item.category || '',
+      websiteLink: normalizeWebsiteLink(item.websiteLink),
       description: item.description || '',
       points
     });
@@ -552,6 +624,15 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  const saveDashboardBtn = document.getElementById('saveDashboardChanges');
+  if (saveDashboardBtn) {
+    saveDashboardBtn.addEventListener('click', () => {
+      const currentData = loadData();
+      saveData(currentData);
+      updateStatus('Dashboard changes saved successfully.');
+    });
+  }
+
   const addCustomSectionBtn = document.getElementById('addCustomSection');
   if (addCustomSectionBtn) {
     addCustomSectionBtn.addEventListener('click', () => {
@@ -573,11 +654,21 @@ document.addEventListener('DOMContentLoaded', () => {
   if (addProjectBtn) {
     addProjectBtn.addEventListener('click', () => {
       const current = loadData();
-      const next = [...(current.projects || []), { title: 'New Project', year: '2026', category: 'Web Project', description: '', points: ['Add a project highlight'] }];
+      const next = [...(current.projects || []), { title: 'New Project', year: '2026', category: 'Web Project', description: '', points: ['Add a project highlight'], websiteLink: '' }];
       current.projects = next;
       saveData(current);
       populateForm(current);
       updateStatus('New project added.');
+    });
+  }
+
+  const saveProjectChangesBtn = document.getElementById('saveProjectChanges');
+  if (saveProjectChangesBtn) {
+    saveProjectChangesBtn.addEventListener('click', () => {
+      const current = loadData();
+      current.projects = collectProjectData();
+      saveData(current);
+      updateStatus('Project changes saved successfully.');
     });
   }
 
