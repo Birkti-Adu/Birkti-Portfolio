@@ -1226,6 +1226,11 @@ textarea {
     display: flex;
   }
 
+  .project-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
   .three-col,
   .four-col,
   .field-row,
@@ -1255,6 +1260,19 @@ textarea {
 @media (max-width: 560px) {
   .container {
     width: min(100% - 1.2rem, 1120px);
+  }
+
+  .project-card {
+    min-width: 0;
+    padding: 1.25rem;
+  }
+
+  .project-meta {
+    flex-wrap: wrap;
+  }
+
+  .project-card h3 {
+    font-size: clamp(1.25rem, 6vw, 1.5rem);
   }
 
   .hero {
